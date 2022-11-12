@@ -70,6 +70,7 @@ public class NacosPropertySourceBuilder {
 	 */
 	NacosPropertySource build(String dataId, String group, String fileExtension,
 			boolean isRefreshable) {
+		// todo 加载配置文件
 		List<PropertySource<?>> propertySources = loadNacosData(dataId, group,
 				fileExtension);
 		NacosPropertySource nacosPropertySource = new NacosPropertySource(propertySources,
@@ -82,6 +83,7 @@ public class NacosPropertySourceBuilder {
 			String fileExtension) {
 		String data = null;
 		try {
+			// todo 加载配置文件
 			data = configService.getConfig(dataId, group, timeout);
 			if (StringUtils.isEmpty(data)) {
 				log.warn(
@@ -94,6 +96,7 @@ public class NacosPropertySourceBuilder {
 						"Loading nacos data, dataId: '%s', group: '%s', data: %s", dataId,
 						group, data));
 			}
+			// 将加载到的配置文件String解析为List
 			return NacosDataParserHandler.getInstance().parseNacosData(dataId, data,
 					fileExtension);
 		}
