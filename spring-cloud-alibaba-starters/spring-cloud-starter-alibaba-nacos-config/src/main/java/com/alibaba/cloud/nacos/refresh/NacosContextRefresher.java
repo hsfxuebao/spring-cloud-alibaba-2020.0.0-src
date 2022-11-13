@@ -94,7 +94,9 @@ public class NacosContextRefresher
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		// many Spring context
+		// 设置ready状态为true
 		if (this.ready.compareAndSet(false, true)) {
+			// todo 注册监听
 			this.registerNacosListenersForApplications();
 		}
 	}
@@ -109,27 +111,39 @@ public class NacosContextRefresher
 	 */
 	private void registerNacosListenersForApplications() {
 		if (isRefreshEnabled()) {
+			// 遍历当前应用所需要的所有配置文件
 			for (NacosPropertySource propertySource : NacosPropertySourceRepository
 					.getAll()) {
+				// 若当前遍历的配置文件不会自动刷新，则直接跳过
 				if (!propertySource.isRefreshable()) {
 					continue;
 				}
+				// 获取当前遍历的配置文件名称
 				String dataId = propertySource.getDataId();
+				// todo 添加监听器
 				registerNacosListener(propertySource.getGroup(), dataId);
 			}
 		}
 	}
 
 	private void registerNacosListener(final String groupKey, final String dataKey) {
+		// 构建出配置文件key，格式为：  配置文件名,groupId
 		String key = NacosPropertySourceRepository.getMapKey(dataKey, groupKey);
+		// 若指定的文件key没有相应的监听器，则创建一个并写入到缓存listenerMap中
+		// 这个map的key为文件key，value为其对应的监听器
+		// 若指定的文件key具有相应的监听器，则不进行创建
+		// 但这个computeIfAbsent()返回结果为指定key对应的监听器
 		Listener listener = listenerMap.computeIfAbsent(key,
 				lst -> new AbstractSharedListener() {
 					@Override
 					public void innerReceive(String dataId, String group,
 							String configInfo) {
+						// 计数器增一
 						refreshCountIncrement();
+						// 将本次更新记录到刷新历史缓存中
 						nacosRefreshHistory.addRefreshRecord(dataId, group, configInfo);
 						// todo feature: support single refresh for listening
+						// 发布一个RefreshEvent事件
 						applicationContext.publishEvent(
 								new RefreshEvent(this, null, "Refresh Nacos config"));
 						if (log.isDebugEnabled()) {
@@ -140,6 +154,7 @@ public class NacosContextRefresher
 					}
 				});
 		try {
+			// todo 将监听器注册到configService
 			configService.addListener(dataKey, groupKey, listener);
 		}
 		catch (NacosException e) {

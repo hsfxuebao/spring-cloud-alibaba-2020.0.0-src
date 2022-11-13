@@ -40,6 +40,7 @@ public class NacosConfigManager {
 		this.nacosConfigProperties = nacosConfigProperties;
 		// Compatible with older code in NacosConfigProperties,It will be deleted in the
 		// future.
+		// 创建nacosConfigService实例
 		createConfigService(nacosConfigProperties);
 	}
 
@@ -48,6 +49,7 @@ public class NacosConfigManager {
 	 */
 	static ConfigService createConfigService(
 			NacosConfigProperties nacosConfigProperties) {
+		// DCL
 		if (Objects.isNull(service)) {
 			synchronized (NacosConfigManager.class) {
 				try {
